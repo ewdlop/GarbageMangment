@@ -24,6 +24,9 @@ namespace GarbageCollectionDemo
             // Demonstrate short attention memory span
             DemonstrateShortAttentionSpan();
 
+            // Demonstrate Span<T> and Memory<T>
+            DemonstrateSpan();
+
             Console.WriteLine("\n=== Demo Complete ===");
         }
 
@@ -190,6 +193,94 @@ namespace GarbageCollectionDemo
             Console.WriteLine("   • Short-lived objects = Quick 'forgetting' = Fast Gen 0 collection");
             Console.WriteLine("   • Long-lived references = Maintained 'attention' = Promotion to Gen 1/2");
             Console.WriteLine("   • Most objects have 'short attention span' (ephemeral) → Gen 0 optimized for this!");
+            Console.WriteLine();
+        }
+
+        static void DemonstrateSpan()
+        {
+            Console.WriteLine("--- Span<T> and Memory<T> Demonstration ---");
+            Console.WriteLine("📌 Demonstrating modern .NET memory-efficient types\n");
+
+            // Demonstrate stackalloc with Span<T> - no heap allocation, no GC pressure
+            Console.WriteLine("🔹 Stack Allocation with Span<T> (stackalloc):");
+            Console.WriteLine("   • Allocated on the stack, NOT the heap");
+            Console.WriteLine("   • No GC pressure - automatically cleaned when method exits");
+            Console.WriteLine("   • Cannot escape method scope\n");
+
+            var gen0BeforeStack = GC.CollectionCount(0);
+            var memoryBeforeStack = GC.GetTotalMemory(false);
+
+            unsafe
+            {
+                // Stack allocation - no heap, no GC involvement
+                Span<int> stackSpan = stackalloc int[1000];
+                for (int i = 0; i < stackSpan.Length; i++)
+                {
+                    stackSpan[i] = i;
+                }
+
+                Console.WriteLine($"  Created Span<int> with {stackSpan.Length} elements on stack");
+                Console.WriteLine($"  First element: {stackSpan[0]}, Last element: {stackSpan[^1]}");
+            }
+
+            var memoryAfterStack = GC.GetTotalMemory(false);
+            var gen0AfterStack = GC.CollectionCount(0);
+
+            Console.WriteLine($"  Memory change: {memoryAfterStack - memoryBeforeStack:N0} bytes (minimal/zero heap allocation)");
+            Console.WriteLine($"  Gen 0 collections: {gen0AfterStack - gen0BeforeStack} (no GC triggered)");
+
+            // Compare with heap allocation
+            Console.WriteLine("\n🔹 Heap Allocation comparison (array):");
+            var gen0BeforeHeap = GC.CollectionCount(0);
+            var memoryBeforeHeap = GC.GetTotalMemory(false);
+
+            var heapArray = new int[1000];
+            for (int i = 0; i < heapArray.Length; i++)
+            {
+                heapArray[i] = i;
+            }
+
+            var memoryAfterHeap = GC.GetTotalMemory(false);
+            var gen0AfterHeap = GC.CollectionCount(0);
+
+            Console.WriteLine($"  Created int[] with {heapArray.Length} elements on heap");
+            Console.WriteLine($"  Memory change: {memoryAfterHeap - memoryBeforeHeap:N0} bytes (heap allocation)");
+            Console.WriteLine($"  Gen 0 collections: {gen0AfterHeap - gen0BeforeHeap}");
+
+            // Demonstrate Span<T> slicing - no allocation
+            Console.WriteLine("\n🔹 Span<T> Slicing (zero-allocation):");
+            var sourceArray = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            Span<int> fullSpan = sourceArray;
+            Span<int> slice = fullSpan.Slice(2, 5); // Elements [2..7]
+
+            Console.WriteLine($"  Original array: [{string.Join(", ", sourceArray)}]");
+            Console.WriteLine($"  Slice (index 2-6): [{string.Join(", ", slice.ToArray())}]");
+            Console.WriteLine("  ✓ No memory allocation - just a view over existing memory");
+
+            // Demonstrate Memory<T> - can be stored in fields, passed to async methods
+            Console.WriteLine("\n🔹 Memory<T> vs Span<T>:");
+            Console.WriteLine("  • Span<T>: Stack-only, very fast, cannot cross async boundaries");
+            Console.WriteLine("  • Memory<T>: Can be stored in heap, supports async/await");
+
+            Memory<int> memory = new int[100];
+            Console.WriteLine($"  Created Memory<int> with {memory.Length} elements");
+            
+            // Convert to Span for manipulation
+            Span<int> memorySpan = memory.Span;
+            for (int i = 0; i < memorySpan.Length; i++)
+            {
+                memorySpan[i] = i * 2;
+            }
+
+            Console.WriteLine($"  First 5 elements: [{string.Join(", ", memory.Span.Slice(0, 5).ToArray())}]");
+
+            // Demonstrate benefits
+            Console.WriteLine("\n💡 Key Benefits of Span<T> and Memory<T>:");
+            Console.WriteLine("   • Reduced GC pressure - stack allocation when possible");
+            Console.WriteLine("   • Zero-copy slicing - no new allocations for sub-ranges");
+            Console.WriteLine("   • Type-safe - compile-time checks, better than pointers");
+            Console.WriteLine("   • Performance - nearly as fast as unsafe code, but safe");
+            Console.WriteLine("   • Modern .NET idiom - used extensively in .NET Core/5+");
             Console.WriteLine();
         }
     }

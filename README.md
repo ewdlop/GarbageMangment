@@ -90,6 +90,7 @@ dotnet run
 3. **Large Object Heap** - 展示 LOH 的特殊行為
 4. **收集層級** - 展示不同的 GC.Collect() 層級效果
 5. **短期記憶示範** - 展示「短期注意力」(Short Attention Memory Span) 的物件生命週期
+6. **Span<T> 與 Memory<T>** - 展示現代 .NET 記憶體高效型別
 
 ---
 
@@ -158,6 +159,80 @@ for (int i = 0; i < 1000; i++)
 * **持續運作** → GC 的自動化管理
 
 這個類比強調了 GC 作為一個持續、循環的記憶體管理系統的本質。
+
+---
+
+## 🚀 Span<T> 與 Memory<T> - 現代記憶體管理
+
+.NET Core 2.1+ 引入了 `Span<T>` 和 `Memory<T>`，這些是現代高效能記憶體管理的核心型別。
+
+### **Span<T> - 堆疊型記憶體視圖**
+
+* **特點**：
+  * ref struct 型別，僅能存在於堆疊上
+  * 零配置（zero-allocation）的記憶體切片
+  * 可以指向堆疊記憶體、堆積記憶體或原生記憶體
+  * 無法跨越 async/await 邊界
+
+* **優勢**：
+  * 完全無 GC 壓力（使用 stackalloc 時）
+  * 接近原生指標的效能，但型別安全
+  * 零成本抽象（zero-cost abstraction）
+
+```csharp
+// 堆疊配置 - 無堆積分配，無 GC 壓力
+Span<int> stackSpan = stackalloc int[100];
+
+// 切片 - 無配置
+var slice = stackSpan.Slice(10, 20);
+```
+
+### **Memory<T> - 可儲存的記憶體視圖**
+
+* **特點**：
+  * 一般 struct 型別，可以儲存在堆積上
+  * 支援 async/await
+  * 可以轉換為 Span<T> 進行操作
+
+* **用途**：
+  * 需要儲存在欄位或屬性中時
+  * 需要跨越 async 邊界時
+  * 需要較長生命週期時
+
+```csharp
+// 可以儲存在欄位中
+Memory<byte> buffer = new byte[1000];
+
+// 轉換為 Span 進行操作
+Span<byte> span = buffer.Span;
+```
+
+### **與傳統陣列的比較**
+
+| 特性 | Array | Span<T> | Memory<T> |
+|------|-------|---------|-----------|
+| GC 壓力 | 是（堆積配置） | 否（stackalloc） | 是（若堆積配置） |
+| 切片成本 | 高（新配置） | 零（視圖） | 零（視圖） |
+| 跨越 async | 是 | **否** | 是 |
+| 儲存在欄位 | 是 | **否** | 是 |
+| 效能 | 良好 | **極佳** | 良好 |
+
+### **何時使用**
+
+* **Span<T>**：
+  * 需要最高效能
+  * 短期、局部處理
+  * 可以使用 stackalloc
+
+* **Memory<T>**：
+  * 需要儲存或傳遞
+  * async/await 方法中
+  * 較長生命週期
+
+* **Array**：
+  * 需要可變大小
+  * 需要實作 IEnumerable
+  * 舊版 .NET Framework
 
 ---
 
