@@ -21,6 +21,9 @@ namespace GarbageCollectionDemo
             // Demonstrate GC collection levels
             DemonstrateCollectionLevels();
 
+            // Demonstrate short attention memory span
+            DemonstrateShortAttentionSpan();
+
             Console.WriteLine("\n=== Demo Complete ===");
         }
 
@@ -117,6 +120,76 @@ namespace GarbageCollectionDemo
             Console.WriteLine($"  Gen 2: {GC.CollectionCount(2) - gen2Before} collection(s)");
 
             Console.WriteLine("\n⚠️ 一般建議不要手動呼叫 GC.Collect()，讓 CLR 自行判斷最佳時機即可。");
+            Console.WriteLine();
+        }
+
+        static void DemonstrateShortAttentionSpan()
+        {
+            Console.WriteLine("--- Short Attention Memory Span Demonstration ---");
+            Console.WriteLine("📌 Demonstrating ephemeral objects (短期記憶) - objects with 'short attention span'\n");
+
+            var gen0Before = GC.CollectionCount(0);
+            var memoryBefore = GC.GetTotalMemory(false);
+
+            Console.WriteLine($"Initial state:");
+            Console.WriteLine($"  Memory allocated: {memoryBefore:N0} bytes");
+            Console.WriteLine($"  Gen 0 collections: {gen0Before}");
+
+            // Create many short-lived objects that quickly go out of scope
+            // These simulate "short attention span" - quickly forgotten references
+            Console.WriteLine("\n🧠 Creating 1000 short-lived objects (objects quickly lose our 'attention')...");
+            for (int i = 0; i < 1000; i++)
+            {
+                // Each object is created and immediately becomes eligible for collection
+                // when the loop iterates - simulating very short "attention span"
+                var shortLivedObject = new byte[1000];
+                // Object loses reference here - "attention span" ends
+            }
+
+            var memoryAfter = GC.GetTotalMemory(false);
+            var gen0After = GC.CollectionCount(0);
+
+            Console.WriteLine($"\nAfter creating short-lived objects:");
+            Console.WriteLine($"  Memory allocated: {memoryAfter:N0} bytes");
+            Console.WriteLine($"  Gen 0 collections: {gen0After}");
+            Console.WriteLine($"  New Gen 0 collections: {gen0After - gen0Before} (automatic cleanup!)");
+
+            // Now demonstrate the difference with long-lived references
+            Console.WriteLine("\n🎯 Creating 1000 objects with longer 'attention span' (kept in array)...");
+            gen0Before = GC.CollectionCount(0);
+            memoryBefore = GC.GetTotalMemory(false);
+
+            var longLivedObjects = new byte[1000][];
+            for (int i = 0; i < 1000; i++)
+            {
+                // These objects are referenced by the array - we maintain "attention"
+                longLivedObjects[i] = new byte[1000];
+            }
+
+            memoryAfter = GC.GetTotalMemory(false);
+            gen0After = GC.CollectionCount(0);
+
+            Console.WriteLine($"\nWith maintained references:");
+            Console.WriteLine($"  Memory allocated: {memoryAfter:N0} bytes (higher - objects still referenced)");
+            Console.WriteLine($"  Gen 0 collections: {gen0After}");
+            Console.WriteLine($"  New Gen 0 collections: {gen0After - gen0Before}");
+            Console.WriteLine($"  Objects generation: {GC.GetGeneration(longLivedObjects[0])}");
+
+            // Release the "attention" - dereference
+            Console.WriteLine("\n💭 Losing 'attention' - releasing references...");
+            longLivedObjects = null; // "Forgetting" the objects
+
+            GC.Collect(0);
+            GC.WaitForPendingFinalizers();
+
+            var memoryFinal = GC.GetTotalMemory(false);
+            Console.WriteLine($"\nAfter losing 'attention' (releasing references) and GC:");
+            Console.WriteLine($"  Memory allocated: {memoryFinal:N0} bytes (lower - objects collected)");
+
+            Console.WriteLine("\n💡 Key Concept - 'Short Attention Memory Span':");
+            Console.WriteLine("   • Short-lived objects = Quick 'forgetting' = Fast Gen 0 collection");
+            Console.WriteLine("   • Long-lived references = Maintained 'attention' = Promotion to Gen 1/2");
+            Console.WriteLine("   • Most objects have 'short attention span' (ephemeral) → Gen 0 optimized for this!");
             Console.WriteLine();
         }
     }
