@@ -9,6 +9,22 @@ namespace GarbageCollectionDemo
         {
             Console.WriteLine("=== .NET Garbage Collection Demonstration ===\n");
 
+            if (args.Length > 0 && args[0] == "--advanced")
+            {
+                RunAdvancedDemos();
+            }
+            else
+            {
+                RunBasicDemos();
+                Console.WriteLine("\n💡 Tip: Run with --advanced flag to see more advanced GC demonstrations");
+                Console.WriteLine("   Example: dotnet run -- --advanced");
+            }
+
+            Console.WriteLine("\n=== Demo Complete ===");
+        }
+
+        static void RunBasicDemos()
+        {
             // Display GC settings
             DisplayGCSettings();
 
@@ -20,8 +36,21 @@ namespace GarbageCollectionDemo
 
             // Demonstrate GC collection levels
             DemonstrateCollectionLevels();
+        }
 
-            Console.WriteLine("\n=== Demo Complete ===");
+        static void RunAdvancedDemos()
+        {
+            Console.WriteLine("🚀 Running Advanced GC Demonstrations\n");
+
+            // Basic demos first
+            DisplayGCSettings();
+            DemonstrateGenerations();
+
+            // Advanced demos
+            AdvancedGCDemo.DemonstrateMemoryPressure();
+            AdvancedGCDemo.DemonstrateLatencyModes();
+            AdvancedGCDemo.DemonstrateWeakReferences();
+            AdvancedGCDemo.DemonstrateFinalization();
         }
 
         static void DisplayGCSettings()

@@ -83,12 +83,28 @@ cd GarbageCollectionDemo
 dotnet run
 ```
 
+### 進階示範模式
+
+執行進階示範以查看更多 GC 概念：
+
+```bash
+cd GarbageCollectionDemo
+dotnet run -- --advanced
+```
+
 ### 示範內容
 
+**基本示範：**
 1. **GC 設定顯示** - 顯示當前的 GC 模式和設定
 2. **世代示範** - 展示物件如何在世代間晉升
 3. **Large Object Heap** - 展示 LOH 的特殊行為
 4. **收集層級** - 展示不同的 GC.Collect() 層級效果
+
+**進階示範（使用 --advanced）：**
+1. **記憶體壓力** - 展示 GC 在記憶體負載下的行為
+2. **延遲模式** - 展示不同的 GC 延遲模式設定
+3. **WeakReference** - 展示弱引用用於快取情境
+4. **終結器與 IDisposable** - 展示資源清理的最佳實踐
 
 ---
 
@@ -97,9 +113,11 @@ dotnet run
 ```
 GarbageMangement/
 ├── README.md                           # 本文件
+├── GC_Comparison.md                    # .NET vs Java GC 比較
 └── GarbageCollectionDemo/              # 示範程式
     ├── GarbageCollectionDemo.csproj    # 專案檔
-    └── Program.cs                      # 主程式
+    ├── Program.cs                      # 主程式（基本示範）
+    └── AdvancedGCDemo.cs               # 進階示範
 ```
 
 ---
@@ -109,6 +127,9 @@ GarbageMangement/
 * Microsoft Docs: [Fundamentals of Garbage Collection](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals)
 * Jeffrey Richter, *CLR via C# (4th Edition)*, Chapter 21: Garbage Collection
 * Maoni Stephens (Microsoft GC Team Blog): [GC Performance and Internals](https://devblogs.microsoft.com/dotnet/tag/gc/)
+
+**延伸閱讀：**
+* [GC_Comparison.md](GC_Comparison.md) - .NET GC 與 Java HotSpot GC 的詳細比較
 
 ---
 
